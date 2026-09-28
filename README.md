@@ -8,10 +8,10 @@ import { extract, createFunctionProvider } from "@matteogiaquinto/text2data";
 const result = await extract({
   text,
   schema,
-  strategy: [deterministicProvider, openaiProvider],
+  strategy: [deterministicProvider, localModelProvider],
 });
 ```
 
-Use `createOpenAIProvider` from `@matteogiaquinto/text2data/openai` on a trusted server. It requires `OPENAI_API_KEY` and optionally `TEXT2DATA_OPENAI_MODEL`. Do not instantiate it in browser code.
+This V1 intentionally includes no cloud, paid, or external API provider. Plug a local model, parser, or regex engine in with `createFunctionProvider`; the core never makes network requests.
 
 For local consumers, add `"@matteogiaquinto/text2data": "link:../../text-to-data"` then run `pnpm install`. For a private registry release, publish the built package and replace the link with its version.

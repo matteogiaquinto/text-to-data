@@ -9,10 +9,6 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    },
-    "./openai": {
-      "types": "./dist/openai.js",
-      "import": "./dist/openai.js"
     }
   },
   "files": [
@@ -31,8 +27,8 @@
   "keywords": [
     "zod",
     "extraction",
-    "structured-outputs",
-    "openai"
+    "structured-data",
+    "local-models"
   ],
   "license": "MIT",
   "dependencies": {
