@@ -42,6 +42,15 @@ describe("deterministic evidence", () => {
     ]);
   });
 
+  it("does not combine ambiguous French number words", () => {
+    const evidence = numberExtractor.extract({
+      text: "trois cinquante; deux quarante; huit trente",
+    });
+    expect(evidence.map((item) => item.value)).not.toContain(53);
+    expect(evidence.map((item) => item.value)).not.toContain(42);
+    expect(evidence.map((item) => item.value)).not.toContain(38);
+  });
+
   it("extracts configured currency aliases and ISO codes", () => {
     const text = "CHF 300 et 450 EUR, puis francs et euros";
     const evidence = currencyExtractor.extract({ text });
@@ -51,6 +60,97 @@ describe("deterministic evidence", () => {
       ["francs", "CHF"],
       ["euros", "EUR"],
     ]);
+  });
+
+  it("adds ISO codes automatically and grounds compact configured currency amounts", () => {
+    const compactCurrencies = createCurrencyEvidenceExtractor({
+      currencies: {
+        CHF: ["fr", "franc", "francs"],
+        EUR: ["euro", "euros"],
+      },
+    });
+    const text =
+      "1000fr 1500fr 1000CHF CHF1000 300EUR EUR300 1'500CHF CHF1'500 999.90EUR";
+    const evidence = compactCurrencies.extract({ text });
+    expect(
+      evidence
+        .filter((item) => item.kind === "number")
+        .map((item) => item.value),
+    ).toEqual([1000, 1500, 1000, 1000, 300, 300, 1500, 1500, 999.9]);
+    expect(
+      evidence
+        .filter((item) => item.kind === "currency")
+        .map((item) => item.value),
+    ).toEqual(["CHF", "CHF", "CHF", "CHF", "EUR", "EUR", "CHF", "CHF", "EUR"]);
+    expect(
+      evidence.find(
+        (item) => item.raw === "CHF" && item.start === text.indexOf("CHF1000"),
+      ),
+    ).toMatchObject({
+      start: text.indexOf("CHF1000"),
+      end: text.indexOf("CHF1000") + 3,
+    });
+    expect(
+      evidence.find(
+        (item) =>
+          item.kind === "number" && item.start === text.indexOf("CHF1000") + 3,
+      ),
+    ).toMatchObject({
+      raw: "1000",
+      start: text.indexOf("CHF1000") + 3,
+      end: text.indexOf("CHF1000") + 7,
+    });
+  });
+
+  it("does not extract arbitrary embedded alphanumeric references", () => {
+    const compactCurrencies = createCurrencyEvidenceExtractor({
+      currencies: { CHF: ["CHF"] },
+    });
+    expect(
+      compactCurrencies.extract({
+        text: "ABC123XYZ REF2026A ABC1000CHF 1000CHFXYZ",
+      }),
+    ).toEqual([]);
+  });
+
+  it("covers real compact and written-number regressions", () => {
+    const compact = createCurrencyEvidenceExtractor({
+      currencies: { CHF: ["fr"] },
+    });
+    const first =
+      "factur fitness strateji marketing campagn 1000fr flyer 1500fr";
+    expect(
+      compact
+        .extract({ text: first })
+        .filter((item) => item.kind === "number")
+        .map((item) => item.value),
+    ).toEqual([1000, 1500]);
+    expect(
+      compact
+        .extract({ text: first })
+        .filter((item) => item.kind === "currency")
+        .map((item) => item.value),
+    ).toEqual(["CHF", "CHF"]);
+    expect(
+      numberExtractor
+        .extract({ text: "atelier stratégique huit cents francs" })
+        .map((item) => item.value),
+    ).toContain(800);
+    expect(
+      numberExtractor
+        .extract({ text: "conseil à deux mille sept cent cinquante francs" })
+        .map((item) => item.value),
+    ).toContain(2750);
+    expect(
+      numberExtractor
+        .extract({ text: "déplacement à cent quatre-vingt francs cinquante" })
+        .map((item) => item.value),
+    ).toContain(180.5);
+    expect(
+      numberExtractor
+        .extract({ text: "retouches trois cinquante" })
+        .map((item) => item.value),
+    ).not.toContain(53);
   });
 
   it("runs extractors once and gives identical evidence to each fallback provider", async () => {

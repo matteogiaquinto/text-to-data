@@ -5,6 +5,7 @@ import {
   createNumberEvidenceExtractor,
   createNumericGroundingGuard,
   createOllamaProvider,
+  ExtractionFailedError,
   extract,
 } from "../dist/index.js";
 
@@ -45,6 +46,9 @@ const corpus = [
   "Campagne 1000 CHF et flyers 1500 CHF",
   "Audit 300 EUR et formation 450 EUR",
   "Conseil cent quatre-vingt francs cinquante",
+  "Préparation 1000fr et révision 1500fr",
+  "Déplacement à deux mille sept cent cinquante francs",
+  "Retouches trois cinquante",
 ];
 
 const provider = createOllamaProvider({ model });
@@ -66,11 +70,19 @@ for (const text of corpus) {
       }),
     );
   } catch (error) {
+    const failures =
+      error instanceof ExtractionFailedError ? error.failures : [error];
+    const codes = failures.map((failure) => failure?.code ?? "UNKNOWN");
+    const state = codes.includes("GUARD_VALIDATION_ERROR")
+      ? "guard failure"
+      : codes.includes("VALIDATION_ERROR")
+        ? "Zod failure"
+        : "provider failure";
     console.log(
       JSON.stringify({
         text,
-        final: "failure",
-        code: error?.code ?? "UNKNOWN",
+        final: state,
+        failures: codes,
       }),
     );
   }

@@ -133,18 +133,31 @@ function parseFrenchTokens(
   let current = 0;
   let index = start;
   let seen = false;
+  let appendAfterScale = false;
   while (index < tokens.length) {
     if (index > start && !/^\s+$/u.test(tokens[index].separatorBefore)) break;
     const word = tokens[index].lower;
     if (word in units) {
-      current += units[word];
+      const unit = units[word];
+      const currentRemainder = current % 100;
+      const canAppendUnit =
+        currentRemainder >= 20 && currentRemainder % 10 === 0 && unit < 10;
+      const canAppendTens = current === 0 || appendAfterScale;
+      if (
+        current !== 0 &&
+        !(unit < 20 ? canAppendUnit || appendAfterScale : canAppendTens)
+      )
+        break;
+      current += unit;
       seen = true;
+      appendAfterScale = false;
       index += 1;
       continue;
     }
     if (word === "cent" || word === "cents") {
       current = (current || 1) * 100;
       seen = true;
+      appendAfterScale = true;
       index += 1;
       continue;
     }
@@ -152,6 +165,7 @@ function parseFrenchTokens(
       total += (current || 1) * 1000;
       current = 0;
       seen = true;
+      appendAfterScale = true;
       index += 1;
       continue;
     }
