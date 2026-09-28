@@ -1,7 +1,7 @@
 {
-  "name": "@matteogiaquinto/text2data",
+  "name": "@matteogiaquinto/text-to-data",
   "version": "0.1.0",
-  "description": "Provider-agnostic, schema-validated text extraction for TypeScript.",
+  "description": "Provider-agnostic TypeScript library for extracting structured, validated data from natural language.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -14,6 +14,18 @@
   "files": [
     "dist"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/matteogiaquinto/text-to-data.git"
+  },
+  "homepage": "https://github.com/matteogiaquinto/text-to-data#readme",
+  "bugs": {
+    "url": "https://github.com/matteogiaquinto/text-to-data/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "packageManager": "pnpm@11.19.0",
   "engines": {
     "node": ">=22"
   },
