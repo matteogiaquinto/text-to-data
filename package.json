@@ -1,0 +1,33 @@
+{
+  "name": "@matteogiaquinto/text2data",
+  "version": "0.1.0",
+  "description": "Provider-agnostic, schema-validated text extraction for TypeScript.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" },
+    "./openai": { "types": "./dist/openai.js", "import": "./dist/openai.js" }
+  },
+  "files": ["dist"],
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "lint": "eslint src test --max-warnings=0",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "format:check": "prettier --check ."
+  },
+  "keywords": ["zod", "extraction", "structured-outputs", "openai"],
+  "license": "MIT",
+  "dependencies": { "zod": "^4.1.11" },
+  "devDependencies": {
+    "@eslint/js": "^9.36.0",
+    "@types/node": "^24.5.2",
+    "eslint": "^9.36.0",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.44.1",
+    "vitest": "^3.2.4"
+  }
+}
