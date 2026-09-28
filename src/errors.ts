@@ -36,6 +36,20 @@ export class ValidationError extends Text2DataError {
   }
 }
 
+export class GuardValidationError extends Text2DataError {
+  constructor(
+    public readonly provider: string,
+    public readonly guard: string,
+    public readonly reason?: string,
+  ) {
+    super(
+      reason ?? `Guard "${guard}" rejected output from provider "${provider}"`,
+      "GUARD_VALIDATION_ERROR",
+    );
+    this.name = "GuardValidationError";
+  }
+}
+
 export class ExtractionFailedError extends Text2DataError {
   constructor(public readonly failures: readonly Text2DataError[]) {
     super("All text extraction providers failed", "EXTRACTION_FAILED");

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
   ExtractionFailedError,
+  GuardValidationError,
   ProviderError,
   Text2DataError,
   ValidationError,
@@ -14,6 +15,7 @@ export async function extract<TSchema extends z.ZodType>(
     throw new Text2DataError("Text is required", "EMPTY_TEXT");
   const providers = resolveProviders(options);
   const jsonSchema = z.toJSONSchema(options.schema, { io: "input" });
+  const evidence = await extractEvidence(options);
   const failures: Text2DataError[] = [];
 
   for (const provider of providers) {
@@ -23,9 +25,13 @@ export async function extract<TSchema extends z.ZodType>(
         jsonSchema,
         ...(options.instructions ? { instructions: options.instructions } : {}),
         ...(options.context === undefined ? {} : { context: options.context }),
+        ...(evidence.length ? { evidence } : {}),
       });
       const parsed = options.schema.safeParse(raw);
-      if (parsed.success) return parsed.data;
+      if (parsed.success) {
+        await validateGuards(options, parsed.data, evidence, provider);
+        return parsed.data;
+      }
       failures.push(new ValidationError(provider.name, parsed.error.issues));
     } catch (error) {
       failures.push(
@@ -36,6 +42,47 @@ export async function extract<TSchema extends z.ZodType>(
     }
   }
   throw new ExtractionFailedError(failures);
+}
+
+async function extractEvidence<TSchema extends z.ZodType>(
+  options: ExtractOptions<TSchema>,
+): Promise<readonly import("./types.js").TextEvidence[]> {
+  const extractors = options.evidenceExtractors ?? [];
+  const extracted = await Promise.all(
+    extractors.map((extractor) =>
+      extractor.extract({
+        text: options.text,
+        ...(options.context === undefined ? {} : { context: options.context }),
+      }),
+    ),
+  );
+  return extracted.flat();
+}
+
+async function validateGuards<TSchema extends z.ZodType>(
+  options: ExtractOptions<TSchema>,
+  value: z.output<TSchema>,
+  evidence: readonly import("./types.js").TextEvidence[],
+  provider: Text2DataProvider,
+): Promise<void> {
+  for (const guard of options.guards ?? []) {
+    try {
+      const accepted = await guard.validate({
+        value,
+        text: options.text,
+        evidence,
+        provider,
+        ...(options.context === undefined ? {} : { context: options.context }),
+      });
+      if (accepted === false) {
+        throw new GuardValidationError(provider.name, guard.name);
+      }
+    } catch (error) {
+      if (error instanceof Text2DataError) throw error;
+      const reason = error instanceof Error ? error.message : undefined;
+      throw new GuardValidationError(provider.name, guard.name, reason);
+    }
+  }
 }
 
 function resolveProviders<TSchema extends z.ZodType>(

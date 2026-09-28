@@ -22,7 +22,8 @@
     "test": "vitest run",
     "lint": "eslint src test --max-warnings=0",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "eval:ollama": "pnpm build && node scripts/eval-ollama.mjs"
   },
   "keywords": [
     "zod",
