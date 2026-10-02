@@ -1,4 +1,5 @@
-export { extract } from "./extract.js";
+export { extract, extractDetailed } from "./extract.js";
+export { createPercentageEvidenceExtractor } from "./percentage-evidence.js";
 export { createFunctionProvider } from "./function-provider.js";
 export { createNumberEvidenceExtractor } from "./number-evidence.js";
 export { createCurrencyEvidenceExtractor } from "./currency-evidence.js";
@@ -15,6 +16,7 @@ export {
   ValidationError,
 } from "./errors.js";
 export type {
+  DetailedExtraction,
   ExtractOptions,
   ProviderExtractInput,
   Text2DataProvider,

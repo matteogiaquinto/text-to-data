@@ -6,19 +6,31 @@ import {
   Text2DataError,
   ValidationError,
 } from "./errors.js";
-import type { ExtractOptions, Text2DataProvider } from "./types.js";
+import type {
+  DetailedExtraction,
+  ExtractOptions,
+  Text2DataProvider,
+} from "./types.js";
 
 export async function extract<TSchema extends z.ZodType>(
   options: ExtractOptions<TSchema>,
 ): Promise<z.output<TSchema>> {
+  return (await extractDetailed(options)).data;
+}
+
+export async function extractDetailed<TSchema extends z.ZodType>(
+  options: ExtractOptions<TSchema>,
+): Promise<DetailedExtraction<z.output<TSchema>>> {
   if (!options.text.trim())
     throw new Text2DataError("Text is required", "EMPTY_TEXT");
   const providers = resolveProviders(options);
   const jsonSchema = z.toJSONSchema(options.schema, { io: "input" });
   const evidence = await extractEvidence(options);
   const failures: Text2DataError[] = [];
+  const attemptedProviderNames: string[] = [];
 
   for (const provider of providers) {
+    attemptedProviderNames.push(provider.name);
     try {
       const raw = await provider.extract({
         text: options.text,
@@ -30,7 +42,13 @@ export async function extract<TSchema extends z.ZodType>(
       const parsed = options.schema.safeParse(raw);
       if (parsed.success) {
         await validateGuards(options, parsed.data, evidence, provider);
-        return parsed.data;
+        return {
+          data: parsed.data,
+          evidence,
+          providerName: provider.name,
+          attemptedProviderNames,
+          guardNames: (options.guards ?? []).map((guard) => guard.name),
+        };
       }
       failures.push(new ValidationError(provider.name, parsed.error.issues));
     } catch (error) {

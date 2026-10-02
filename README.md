@@ -155,3 +155,18 @@ This optional command is not part of CI and does not download or call a paid ser
 ## License
 
 [MIT](LICENSE)
+
+## Detailed extraction
+
+`extractDetailed(options)` runs the same pipeline as `extract(options)` and returns
+`{ data, evidence, providerName, attemptedProviderNames, guardNames }`. The guard names
+are those that succeeded on the winning attempt. Failed attempts are listed by name;
+no prompts, context, credentials, raw provider responses or failure internals are returned.
+`extract()` delegates to this pipeline and still returns only validated data. Both APIs
+retain the same validation/guard/fallback error behavior.
+
+`createPercentageEvidenceExtractor()` adds generic `percentage` evidence for explicit
+expressions such as `8.1%`, `8,1 %`, `8.1 percent` and `8,1 pour cent`, with normalized
+numeric values and exact source spans. It does not infer the percentage's business role.
+Application guards should use that evidence for percentage fields in addition to grounding
+all numeric values. Numeric membership alone cannot prevent swapping supported values.
