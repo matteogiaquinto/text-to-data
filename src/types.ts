@@ -1,5 +1,13 @@
 import type { z } from "zod";
 
+export interface DetailedExtraction<TValue> {
+  data: TValue;
+  evidence: readonly TextEvidence[];
+  providerName: string;
+  attemptedProviderNames: readonly string[];
+  guardNames: readonly string[];
+}
+
 export interface ProviderExtractInput {
   text: string;
   jsonSchema: object;
