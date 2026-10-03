@@ -3,6 +3,7 @@ export { createPercentageEvidenceExtractor } from "./percentage-evidence.js";
 export { createFunctionProvider } from "./function-provider.js";
 export { createNumberEvidenceExtractor } from "./number-evidence.js";
 export { createCurrencyEvidenceExtractor } from "./currency-evidence.js";
+export { createDateEvidenceExtractor } from "./date-evidence.js";
 export {
   createNumericGroundingGuard,
   createCurrencyGroundingGuard,
